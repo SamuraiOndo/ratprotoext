@@ -1,8 +1,8 @@
 # Information
 extracts Asobo Ratatouille DGC files
 
-# Credits
-Thanks to [Emily](https://github.com/widberg/fmt_fuel/blob/master/inc_fuel.py) for her decompressing algorithm
+## Credits
+Thanks to [Emily](https://github.com/widberg/fmt_fuel/blob/master/inc_fuel.py) for her decompression algorithm
 Uses SutandoTsukai181's [PyBinaryReader](https://github.com/SutandoTsukai181/PyBinaryReader).
 
 # Warning
