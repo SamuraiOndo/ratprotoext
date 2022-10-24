@@ -175,5 +175,3 @@ for i in range(blockcount):
         fe.write(file)
         fe.close()
     padding = reader.read_bytes((blockPaddedSizeList[i]-blockSizeList[i]))
-#yes = decompress(f.read())
-#fe.write(yes) 
