@@ -132,7 +132,7 @@ for i in range(blockcount):
             fileextension = "Surface_Z"
         elif (classCrc32 == 1910554652):
             fileextension = "SplineGraph_Z"
-        elif (classCrc32 == 705810152):
+        elif (classCrc32 == 1943824915):
             fileextension = "Lod_Z"
         elif (classCrc32 == 2204276779):
             fileextension = "Material_Z"
