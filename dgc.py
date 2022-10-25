@@ -1,7 +1,9 @@
+from msilib import datasizemask
 from binary_reader import BinaryReader
 import sys
 from pathlib import Path
 import os
+import json
 # stolen from emily (https://github.com/widberg/fmt_fuel/blob/master/inc_fuel.py#L18), thank you!
 def decompress(data):
     WINDOW_LOG = 14
@@ -67,17 +69,29 @@ for i in range(64):
     blockSizeList.append(reader.read_uint32())
     reader.read_bytes(12)
 reader.read_bytes(228)
+p = 0
+header = {
+    "Count": blockcount,
+}
 for i in range(blockcount):
     for j in range(objectCountList[i]):
         dataSize = reader.read_uint32()
         compressedSize = reader.read_uint32()
         classCrc32 = reader.read_uint32()
         nameCrc32 = reader.read_uint32()
+        w = BinaryReader()
+        w.set_endian(True)
         if (compressedSize != 0):
             readFile = reader.read_bytes(compressedSize)
             file = decompress(readFile)
         else:
             file = reader.read_bytes(dataSize)
+        x = {
+            "nameCrc32": nameCrc32,
+            "classCrc32": classCrc32,
+            }
+        header.update({p: x})
+        p+=1
         if (classCrc32 == 549480509):
             fileextension = "Omni_Z"
         elif (classCrc32 == 705810152):
@@ -172,6 +186,17 @@ for i in range(blockcount):
         print("Writing to " + fileName)
         output_file = output_path / (fileName)
         fe = open(output_file, "wb")
+        w.write_uint32(dataSize)
+        w.write_uint32(compressedSize)
+        w.write_uint32(classCrc32)
+        w.write_uint32(nameCrc32)
+        buffer = w.buffer()
+        fe.write(buffer)
         fe.write(file)
         fe.close()
+    output_file = output_path / ("manifest.json")
+    filejson = open(output_file, "w")
+    filejson.write(json.dumps(header,ensure_ascii = False, indent = 2)) 
     padding = reader.read_bytes((blockPaddedSizeList[i]-blockSizeList[i]))
+#yes = decompress(f.read())
+#fe.write(yes) 
