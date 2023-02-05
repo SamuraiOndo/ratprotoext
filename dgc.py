@@ -56,7 +56,10 @@ f = Mypath.open("rb")
 output_path = directory / Path(Myfilename + ".unpack")
 output_path.mkdir(parents=True, exist_ok=True)
 reader = BinaryReader(f.read())
-reader.set_endian(True)
+if ".DGC" in sys.argv[1]:
+    reader.set_endian(True)
+else:
+    reader.set_endian(False)
 reader.seek(256)
 blockcount = reader.read_uint32()
 reader.seek(24,1)
@@ -69,11 +72,14 @@ for i in range(64):
     blockSizeList.append(reader.read_uint32())
     reader.read_bytes(12)
 reader.read_bytes(228)
-p = 0
+objects = Path(output_path / ("objects"))
+objects.mkdir(parents=True, exist_ok=True)
 header = {
     "Count": blockcount,
 }
 for i in range(blockcount):
+    k = {}
+    p = 0
     for j in range(objectCountList[i]):
         dataSize = reader.read_uint32()
         compressedSize = reader.read_uint32()
@@ -81,16 +87,19 @@ for i in range(blockcount):
         nameCrc32 = reader.read_uint32()
         w = BinaryReader()
         w.set_endian(True)
+        compressed = False
         if (compressedSize != 0):
             readFile = reader.read_bytes(compressedSize)
             file = decompress(readFile)
+            compressed = True
         else:
             file = reader.read_bytes(dataSize)
         x = {
             "nameCrc32": nameCrc32,
             "classCrc32": classCrc32,
-            }
-        header.update({p: x})
+            "Compressed?": compressed,
+            }  
+        k.update({p: x})
         p+=1
         if (classCrc32 == 549480509):
             fileextension = "Omni_Z"
@@ -184,7 +193,7 @@ for i in range(blockcount):
             fileextension = str(classCrc32)
         fileName = (str(nameCrc32) + "." + fileextension)
         print("Writing to " + fileName)
-        output_file = output_path / (fileName)
+        output_file = output_path / ("objects") / (fileName)
         fe = open(output_file, "wb")
         w.write_uint32(dataSize)
         w.write_uint32(compressedSize)
@@ -194,9 +203,10 @@ for i in range(blockcount):
         fe.write(buffer)
         fe.write(file)
         fe.close()
-    output_file = output_path / ("manifest.json")
-    filejson = open(output_file, "w")
-    filejson.write(json.dumps(header,ensure_ascii = False, indent = 2)) 
-    padding = reader.read_bytes((blockPaddedSizeList[i]-blockSizeList[i]))
+    padding = reader.read_bytes((blockPaddedSizeList[i]-blockSizeList[i]))  
+    header.update({i: k})
+output_file = output_path / ("manifest.json")
+filejson = open(output_file, "w")
+filejson.write(json.dumps(header,ensure_ascii = False, indent = 2)) 
 #yes = decompress(f.read())
 #fe.write(yes) 
